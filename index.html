@@ -471,6 +471,26 @@
       min-width: 0;
     }
   }
+  
+  footer {
+    text-align: center;
+    color: white;
+    padding: 20px;
+    margin-top: 20px;
+    font-size: 14px;
+    opacity: 0.9;
+  }
+
+  footer a {
+    color: white;
+    text-decoration: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+    transition: border-color 0.2s;
+  }
+
+  footer a:hover {
+    border-bottom-color: white;
+  }
 
   @media (max-width: 768px) {
     h1 {
@@ -665,6 +685,11 @@
     <textarea id="output" placeholder="Export your palette to see the output here..." aria-label="Export output"></textarea>
   </div>
 </div>
+
+<footer>
+  <div>&copy; 2026 Chromato Cratie. Created by SGL</div>
+  <div style="margin-top: 8px; font-size: 12px; opacity: 0.8;">Licensed under <a href="https://en.wikipedia.org/wiki/MIT_License" target="_blank" rel="noopener">MIT License</a></div>
+</footer>
 
 <script>
 const initialPalette = [
