@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Palette Explorer</title>
+<style>
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #1a1a1a;
+  }
+
+  .container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 20px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 40px;
+    color: white;
+  }
+
+  h1 {
+    margin: 0 0 10px 0;
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  }
+
+  .subtitle {
+    font-size: 18px;
+    opacity: 0.9;
+  }
+
+  .panel {
+    background: white;
+    padding: 28px 32px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    margin-bottom: 28px;
+    backdrop-filter: blur(10px);
+    transition: background-color 0.3s, color 0.3s;
+  }
+
+  .panel.preview-bg {
+    background: var(--preview-bg, white);
+    color: var(--preview-text, #1a1a1a);
+  }
+
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .control-group label {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 8px;
+    color: #666;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .control-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #667eea;
+  }
+
+  input[type=range] {
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: #e0e0e0;
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    transition: all 0.2s;
+  }
+
+  input[type=range]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: #764ba2;
+  }
+
+  input[type=range]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #667eea;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    transition: all 0.2s;
+  }
+
+  input[type=range]::-moz-range-thumb:hover {
+    transform: scale(1.2);
+    background: #764ba2;
+  }
+
+  select, button {
+    padding: 10px 16px;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    background: white;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  select {
+    cursor: pointer;
+    width: 100%;
+  }
+
+  select:hover, select:focus {
+    border-color: #667eea;
+    outline: none;
+  }
+
+  button {
+    cursor: pointer;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    font-weight: 600;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    width: 100%;
+    transition: all 0.2s;
+  }
+
+  button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  }
+
+  button:active {
+    transform: translateY(0);
+  }
+
+  button:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .action-buttons button {
+    flex: 1;
+  }
+
+  .btn-secondary {
+    background: white;
+    color: #667eea;
+    border: 2px solid #667eea;
+    box-shadow: none;
+    transition: all 0.2s;
+  }
+
+  .btn-secondary:hover {
+    background: #f0f0f0;
+  }
+
+  .preview-bg .btn-secondary {
+    background: rgba(255, 255, 255, 0.2);
+    color: inherit;
+    border-color: currentColor;
+  }
+
+  .preview-bg .btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .stats {
+    display: flex;
+    gap: 20px;
+    padding: 16px 0;
+    border-top: 2px solid #f0f0f0;
+    margin-top: 20px;
+  }
+
+  .stat-item {
+    flex: 1;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #667eea;
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+  }
+
+  .palette {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  
+  .palette.cvd-filtered {
+    filter: var(--cvd-filter, none);
+  }
+
+  .swatch {
+    border-radius: 12px;
+    background: var(--swatch-bg, white);
+    box-shadow: 0 4px 16px var(--swatch-shadow, rgba(0, 0, 0, 0.1));
+    overflow: hidden;
+    cursor: grab;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  .swatch:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px var(--swatch-shadow-hover, rgba(0, 0, 0, 0.15));
+  }
+
+  .swatch:active {
+    cursor: grabbing;
+  }
+
+  .swatch.dragging {
+    opacity: 0.5;
+  }
+
+  .swatch.drag-over {
+    border: 2px dashed #667eea;
+  }
+
+  .color-box {
+    width: 100%;
+    height: 120px;
+    position: relative;
+    transition: height 0.3s;
+  }
+
+  .swatch:hover .color-box {
+    height: 140px;
+  }
+
+  .swatch-info {
+    padding: 12px;
+    background: var(--swatch-bg, white);
+    color: var(--swatch-text, #1a1a1a);
+  }
+
+  .swatch-name {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 4px;
+    text-transform: capitalize;
+  }
+
+  .swatch-meta {
+    font-size: 11px;
+    opacity: 0.8;
+    font-family: 'Courier New', monospace;
+  }
+  
+  .ab-container {
+    display: flex;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .ab-plane-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 500px;
+    flex-shrink: 0;
+  }
+  
+  .ab-info {
+    padding: 20px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    font-size: 13px;
+    min-width: 220px;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+  
+  .ab-info.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-10px);
+  }
+
+  .ab-swatch {
+    width: 100%;
+    height: 80px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  .ab-details {
+    color: #1a1a1a;
+  }
+
+  .ab-name {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 8px;
+    text-transform: capitalize;
+  }
+
+  .ab-meta {
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #666;
+  }
+
+  .copy-indicator {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0,0,0,0.7);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .copy-indicator.show {
+    opacity: 1;
+  }
+
+  textarea {
+    width: 100%;
+    height: 200px;
+    margin-top: 12px;
+    padding: 16px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    border-radius: 8px;
+    border: 2px solid #e0e0e0;
+    resize: vertical;
+    transition: border-color 0.2s;
+  }
+
+  textarea:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .section-header h2 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    transition: color 0.3s;
+  }
+
+  .filter-badge {
+    background: rgba(128, 128, 128, 0.2);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    color: inherit;
+    transition: background 0.3s;
+  }
+
+  .cvd-options {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .cvd-options label {
+    text-transform: none;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .cvd-options input[type="radio"] {
+    cursor: pointer;
+  }
+
+  @media (max-width: 900px) {
+    .ab-container {
+      flex-direction: column;
+    }
+
+    .ab-plane-wrapper {
+      max-width: 100%;
+    }
+
+    .ab-info {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+
+  @media (max-width: 768px) {
+    h1 {
+      font-size: 36px;
+    }
+    
+    .controls-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .palette {
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    }
+
+    .stats {
+      flex-wrap: wrap;
+    }
+  }
+</style>
+</head>
+<body>
+
+<svg xmlns="http://www.w3.org/2000/svg" width="0" height="0">
+  <defs>
+    <filter id="protanopia">
+      <feColorMatrix type="matrix" values="
+        0.567 0.433 0     0 0
+        0.558 0.442 0     0 0
+        0     0.242 0.758 0 0
+        0     0     0     1 0"/>
+    </filter>
+
+    <filter id="protanomaly">
+      <feColorMatrix type="matrix" values="
+        0.817 0.183 0     0 0
+        0.333 0.667 0     0 0
+        0     0.125 0.875 0 0
+        0     0     0     1 0"/>
+    </filter>
+
+    <filter id="deuteranopia">
+      <feColorMatrix type="matrix" values="
+        0.625 0.375 0     0 0
+        0.700 0.300 0     0 0
+        0     0.300 0.700 0 0
+        0     0     0     1 0"/>
+    </filter>
+
+    <filter id="deuteranomaly">
+      <feColorMatrix type="matrix" values="
+        0.800 0.200 0     0 0
+        0.258 0.742 0     0 0
+        0     0.142 0.858 0 0
+        0     0     0     1 0"/>
+    </filter>
+
+    <filter id="tritanopia">
+      <feColorMatrix type="matrix" values="
+        0.950 0.050 0     0 0
+        0     0.433 0.567 0 0
+        0     0.475 0.525 0 0
+        0     0     0     1 0"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="container">
+  <header>
+    <h1>🎨 Palette Explorer</h1>
+    <div class="subtitle">Discover, filter, and export beautiful color palettes</div>
+  </header>
+
+  <div class="panel">
+    <div class="controls-grid">
+      <div class="control-group">
+        <label>
+          Min Lightness
+          <span class="control-value" id="minLval">0.0</span>
+        </label>
+        <input type="range" id="minL" min="0" max="1" step="0.01" value="0" aria-label="Minimum lightness">
+      </div>
+
+      <div class="control-group">
+        <label>
+          Max Lightness
+          <span class="control-value" id="maxLval">1.0</span>
+        </label>
+        <input type="range" id="maxL" min="0" max="1" step="0.01" value="1" aria-label="Maximum lightness">
+      </div>
+
+      <div class="control-group">
+        <label>
+          Background Preview
+          <span class="control-value" id="bgVal">1.0</span>
+        </label>
+        <input type="range" id="bg" min="0" max="1" step="0.01" value="1.0" aria-label="Background brightness">
+      </div>
+
+      <div class="control-group">
+        <label>
+          Number of Colors
+          <span class="control-value" id="countVal">50</span>
+        </label>
+        <input type="range" id="count" min="1" max="50" step="1" value="50" aria-label="Number of colors to display">
+      </div>
+	  
+      <div class="control-group">
+        <label>Color Vision</label>
+        <div class="cvd-options">
+          <label><input type="radio" name="cvd" value="none" checked> Normal</label>
+          <label><input type="radio" name="cvd" value="protanopia"> Protanopia</label>
+          <label><input type="radio" name="cvd" value="protanomaly"> Protanomaly</label>
+          <label><input type="radio" name="cvd" value="deuteranopia"> Deuteranopia</label>
+          <label><input type="radio" name="cvd" value="deuteranomaly"> Deuteranomaly</label>
+          <label><input type="radio" name="cvd" value="tritanopia"> Tritanopia</label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label>Export Format</label>
+        <select id="exportFormat" aria-label="Select export format">
+          <option value="json">JSON</option>
+          <option value="hex">Hex List</option>
+          <option value="rgb">RGB List</option>
+          <option value="cpp">C++ Array</option>
+          <option value="css">CSS Variables</option>
+        </select>
+        <label>&nbsp;</label>
+        <div class="action-buttons">
+          <button onclick="exportPalette()">📋 Export</button>
+          <button class="btn-secondary" onclick="resetFilters()">↺ Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-item">
+        <span class="stat-value" id="totalColors">50</span>
+        <span class="stat-label">Total Colors</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="displayedColors">50</span>
+        <span class="stat-label">Displayed</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="avgLightness">0.70</span>
+        <span class="stat-label">Avg Lightness</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel preview-bg" id="palettePanel">
+    <div class="section-header">
+      <h2>Color Palette</h2>
+      <div class="filter-badge" id="filterInfo">All colors</div>
+    </div>
+    <div class="palette" id="palette"></div>
+  </div>
+  
+  <div class="panel preview-bg">
+    <div class="section-header">
+      <h2>a–b Plane (CIELAB)</h2>
+      <div class="filter-badge">Chromatic distribution</div>
+    </div>
+  
+    <div class="ab-container">
+      <div class="ab-plane-wrapper">
+        <img src="abplane.svg" style="width:100%; display:block; border-radius:12px" alt="CIELAB a-b plane">
+        <canvas id="abPlane" width="500" height="500" style="position:absolute; inset:0;"></canvas>
+      </div>
+      
+      <div id="abInfo" class="ab-info hidden">
+        <div class="ab-swatch"></div>
+        <div class="ab-details">
+          <div class="ab-name"></div>
+          <div class="ab-meta"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="panel preview-bg" id="previewPanel">
+    <div class="section-header">
+      <h2>Export Output</h2>
+      <button class="btn-secondary" onclick="copyOutput()" style="width: auto; padding: 8px 16px;">
+        📋 Copy to Clipboard
+      </button>
+    </div>
+    <textarea id="output" placeholder="Export your palette to see the output here..." aria-label="Export output"></textarea>
+  </div>
+</div>
+
+<script>
+const initialPalette = [
+  {name:"blue",hex:"#0343df",L:0.47},
+  {name:"orange",hex:"#e58b2a",L:0.75},
+  {name:"turquoise",hex:"#06c2ac",L:0.70},
+  {name:"purple",hex:"#7e1e9c",L:0.50},
+  {name:"yellow",hex:"#ffff14",L:0.96},
+  {name:"cyan",hex:"#00ffff",L:0.91},
+  {name:"red",hex:"#d00000",L:0.52},
+  {name:"mint green",hex:"#8bff73",L:0.90},
+  {name:"maroon",hex:"#8b0030",L:0.45},
+  {name:"royal blue",hex:"#0504aa",L:0.40},
+  {name:"green",hex:"#15d000",L:0.70},
+  {name:"lavender",hex:"#c79fef",L:0.78},
+  {name:"sky blue",hex:"#75bbfd",L:0.82},
+  {name:"bright orange",hex:"#ff5b00",L:0.70},
+  {name:"plum",hex:"#7a2260",L:0.50},
+  {name:"forest green",hex:"#085e11",L:0.48},
+  {name:"bright blue",hex:"#1b76fe",L:0.55},
+  {name:"mustard",hex:"#cece01",L:0.80},
+  {name:"rose",hex:"#cf6275",L:0.65},
+  {name:"sea green",hex:"#53fca1",L:0.86},
+  {name:"violet",hex:"#9a0efa",L:0.61},
+  {name:"peach",hex:"#ffb07c",L:0.82},
+  {name:"pink",hex:"#ff81c0",L:0.78},
+  {name:"lime",hex:"#aaff32",L:0.88},
+  {name:"dark turquoise",hex:"#045c5a",L:0.35},
+  {name:"light yellow",hex:"#fffe7a",L:0.92},
+  {name:"light pink",hex:"#ffd1df",L:0.90},
+  {name:"olive",hex:"#6e750e",L:0.55},
+  {name:"periwinkle",hex:"#8e82fe",L:0.78},
+  {name:"magenta",hex:"#c20078",L:0.60},
+  {name:"aqua",hex:"#13eac9",L:0.80},
+  {name:"coral",hex:"#fc5a50",L:0.70},
+  {name:"navy blue",hex:"#001966",L:0.25},
+  {name:"salmon",hex:"#ff796c",L:0.75},
+  {name:"greenish blue",hex:"#0b6b87",L:0.50},
+  {name:"bright purple",hex:"#d86bff",L:0.78},
+  {name:"tan",hex:"#d1b26f",L:0.75},
+  {name:"brown",hex:"#653700",L:0.40},
+  {name:"raspberry",hex:"#b00149",L:0.45},
+  {name:"pale blue",hex:"#d0fefe",L:0.95},
+  {name:"medium pink",hex:"#f36196",L:0.75},
+  {name:"grass green",hex:"#3f9b0b",L:0.55},
+  {name:"cornflower blue",hex:"#5170d7",L:0.60},
+  {name:"blush",hex:"#f29e8e",L:0.80},
+  {name:"vibrant purple",hex:"#ad03de",L:0.60},
+  {name:"maize",hex:"#f4d054",L:0.85},
+  {name:"light red",hex:"#ff2222",L:0.72},
+  {name:"gold",hex:"#dbb40c",L:0.78},
+  {name:"teal",hex:"#029386",L:0.55},
+  {name:"dark orange",hex:"#c65102",L:0.55}
+];
+
+let palette = initialPalette.slice();
+
+const elements = {
+  minL: document.getElementById("minL"),
+  maxL: document.getElementById("maxL"),
+  bg: document.getElementById("bg"),
+  count: document.getElementById("count"),
+  palette: document.getElementById("palette"),
+  output: document.getElementById("output"),
+  exportFormat: document.getElementById("exportFormat")
+};
+
+let draggedIndex = null;
+let stickyMax = true;
+
+function hexToRgb(hex) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return { r, g, b };
+}
+
+function srgbToLinear(c) {
+  c /= 255;
+  return c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+function rgbToXyz({ r, g, b }) {
+  r = srgbToLinear(r);
+  g = srgbToLinear(g);
+  b = srgbToLinear(b);
+
+  return {
+    x: r * 0.4124 + g * 0.3576 + b * 0.1805,
+    y: r * 0.2126 + g * 0.7152 + b * 0.0722,
+    z: r * 0.0193 + g * 0.1192 + b * 0.9505
+  };
+}
+
+function xyzToLab({ x, y, z }) {
+  x /= 0.95047;
+  y /= 1.00000;
+  z /= 1.08883;
+
+  const f = v => v > 0.008856 ? Math.cbrt(v) : (7.787 * v) + 16 / 116;
+
+  const fx = f(x);
+  const fy = f(y);
+  const fz = f(z);
+
+  return {
+    L: (116 * fy) - 16,
+    a: 500 * (fx - fy),
+    b: 200 * (fy - fz)
+  };
+}
+
+function hexToLab(hex) {
+  const rgb = hexToRgb(hex);
+  const xyz = rgbToXyz(rgb);
+  return xyzToLab(xyz);
+}
+
+function updatePreviewBackground(bgValue) {
+  const bgGray = Math.round(bgValue * 255);
+  const swatchBg = `rgb(${bgGray}, ${bgGray}, ${bgGray})`;
+  const textColor = bgGray < 128 ? "#ffffff" : "#1a1a1a";
+  const shadowColor = bgGray < 128 ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.1)";
+  const shadowHoverColor = bgGray < 128 ? "rgba(255, 255, 255, 0.35)" : "rgba(0, 0, 0, 0.15)";
+
+  document.documentElement.style.setProperty('--preview-bg', swatchBg);
+  document.documentElement.style.setProperty('--preview-text', textColor);
+  document.documentElement.style.setProperty('--swatch-bg', swatchBg);
+  document.documentElement.style.setProperty('--swatch-text', textColor);
+  document.documentElement.style.setProperty('--swatch-shadow', shadowColor);
+  document.documentElement.style.setProperty('--swatch-shadow-hover', shadowHoverColor);
+}
+
+function getFilteredPalette() {
+  const minL = parseFloat(elements.minL.value);
+  const maxL = parseFloat(elements.maxL.value);
+
+  return palette.filter(c =>
+    minL <= maxL
+      ? (c.L >= minL && c.L <= maxL)
+      : (c.L >= minL || c.L <= maxL)
+  );
+}
+
+function updateStats(filtered) {
+  document.getElementById("totalColors").textContent = palette.length;
+  document.getElementById("displayedColors").textContent = filtered.length;
+  
+  const avgL = filtered.length > 0 
+    ? (filtered.reduce((sum, c) => sum + c.L, 0) / filtered.length).toFixed(2)
+    : "0.00";
+  document.getElementById("avgLightness").textContent = avgL;
+
+  const filterInfo = document.getElementById("filterInfo");
+  filterInfo.textContent = filtered.length === palette.length 
+    ? "All colors"
+    : `Filtered: ${filtered.length} of ${palette.length}`;
+}
+
+function updateControlValues() {
+  document.getElementById("minLval").textContent = parseFloat(elements.minL.value).toFixed(2);
+  document.getElementById("maxLval").textContent = parseFloat(elements.maxL.value).toFixed(2);
+  document.getElementById("bgVal").textContent = parseFloat(elements.bg.value).toFixed(2);
+  document.getElementById("countVal").textContent = elements.count.value;
+}
+
+function createSwatch(color, index) {
+  const swatch = document.createElement("div");
+  swatch.className = "swatch";
+  swatch.draggable = true;
+  swatch.dataset.index = index;
+
+  swatch.innerHTML = `
+    <div class="color-box" style="background:${color.hex}">
+      <div class="copy-indicator">Copied!</div>
+    </div>
+    <div class="swatch-info">
+      <div class="swatch-name">${color.name}</div>
+      <div class="swatch-meta">${color.hex} · L=${color.L.toFixed(2)}</div>
+    </div>
+  `;
+
+  swatch.addEventListener('click', (e) => {
+    if (e.target.closest('.color-box')) {
+      copyToClipboard(color.hex, swatch);
+    }
+  });
+
+  swatch.addEventListener('dragstart', (e) => {
+    draggedIndex = index;
+    swatch.classList.add('dragging');
+  });
+  
+  swatch.addEventListener('dragend', () => {
+    swatch.classList.remove('dragging');
+  });
+  
+  swatch.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    swatch.classList.add('drag-over');
+  });
+
+  swatch.addEventListener('dragleave', () => {
+    swatch.classList.remove('drag-over');
+  });
+  
+  swatch.addEventListener('drop', (e) => {
+    e.preventDefault();
+    swatch.classList.remove('drag-over');
+    
+    const dropIndex = parseInt(e.currentTarget.dataset.index);
+    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+      const item = palette.splice(draggedIndex, 1)[0];
+      palette.splice(dropIndex, 0, item);
+      renderPalette();
+    }
+  });
+
+  return swatch;
+}
+
+const abCanvas = document.getElementById("abPlane");
+const abCtx = abCanvas.getContext("2d");
+const infoPanel = document.getElementById("abInfo");
+let abDots = [];
+
+function showABInfo(d) {
+  infoPanel.classList.remove("hidden");
+  infoPanel.querySelector(".ab-swatch").style.background = d.hex;
+  infoPanel.querySelector(".ab-name").textContent = d.name;
+  infoPanel.querySelector(".ab-meta").innerHTML =
+    `<div><strong>Hex:</strong> ${d.hex}</div>` +
+    `<div><strong>L*:</strong> ${d.lab.L.toFixed(1)}</div>` +
+    `<div><strong>a*:</strong> ${d.lab.a.toFixed(1)}</div>` +
+    `<div><strong>b*:</strong> ${d.lab.b.toFixed(1)}</div>`;
+}
+
+function hideABInfo() {
+  infoPanel.classList.add("hidden");
+}
+
+abCanvas.addEventListener("mousemove", e => {
+  const rect = abCanvas.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (abCanvas.width / rect.width);
+  const my = (e.clientY - rect.top) * (abCanvas.height / rect.height);
+
+  const HIT_RADIUS = 15;
+  let closest = null;
+  let bestDist2 = HIT_RADIUS * HIT_RADIUS;
+
+  for (const d of abDots) {
+    const dx = d.x - mx;
+    const dy = d.y - my;
+    const dist2 = dx * dx + dy * dy;
+
+    if (dist2 < bestDist2) {
+      bestDist2 = dist2;
+      closest = d;
+    }
+  }
+
+  if (closest) {
+    showABInfo(closest);
+    abCanvas.style.cursor = 'pointer';
+  } else {
+    hideABInfo();
+    abCanvas.style.cursor = 'default';
+  }
+});
+
+abCanvas.addEventListener("mouseleave", () => {
+  hideABInfo();
+  abCanvas.style.cursor = 'default';
+});
+
+function renderABPlane(colors) {
+  const ctx = abCtx;
+  const w = abCanvas.width;
+  const h = abCanvas.height;
+
+  ctx.clearRect(0, 0, w, h);
+
+  const range = 110;
+  const centerX = w / 2;
+  const centerY = h / 2;
+  const scale = w / (2 * range);
+
+  ctx.strokeStyle = "rgba(0,0,0,0.2)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, centerY);
+  ctx.lineTo(w, centerY);
+  ctx.moveTo(centerX, 0);
+  ctx.lineTo(centerX, h);
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.font = "14px -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText("a*", w - 20, centerY - 10);
+  ctx.fillText("b*", centerX + 15, 20);
+
+  abDots = [];
+  colors.forEach(c => {
+    const lab = hexToLab(c.hex);
+    const x = centerX + lab.a * scale;
+    const y = centerY - lab.b * scale;
+
+    ctx.beginPath();
+    ctx.arc(x, y, 6, 0, Math.PI * 2);
+    ctx.fillStyle = c.hex;
+    ctx.fill();
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    abDots.push({...c, x, y, lab});
+  });
+}
+
+function renderPalette() {
+  updateControlValues();
+  
+  const bgValue = parseFloat(elements.bg.value);
+  updatePreviewBackground(bgValue);
+
+  let filtered = getFilteredPalette();
+
+  elements.count.max = filtered.length;
+  if (stickyMax || parseInt(elements.count.value) > filtered.length) {
+    elements.count.value = filtered.length;
+  }
+
+  const displayCount = parseInt(elements.count.value);
+  filtered = filtered.slice(0, displayCount);
+
+  updateStats(filtered);
+
+  elements.palette.innerHTML = "";
+  filtered.forEach((color, index) => {
+    elements.palette.appendChild(createSwatch(color, index));
+  });
+  
+  renderABPlane(filtered);
+}
+
+function copyToClipboard(text, swatchElement) {
+  navigator.clipboard.writeText(text).then(() => {
+    const indicator = swatchElement.querySelector('.copy-indicator');
+    indicator.classList.add('show');
+    setTimeout(() => indicator.classList.remove('show'), 1500);
+  }).catch(err => {
+    console.error('Failed to copy:', err);
+  });
+}
+
+function exportPalette() {
+  let filtered = getFilteredPalette();
+  filtered = filtered.slice(0, parseInt(elements.count.value));
+
+  const format = elements.exportFormat.value;
+  let output = "";
+
+  switch (format) {
+    case "json":
+      output = JSON.stringify(filtered, null, 2);
+      break;
+    
+    case "hex":
+      output = filtered.map(c => c.hex).join("\n");
+      break;
+    
+    case "rgb":
+      output = filtered.map(c => {
+        const rgb = hexToRgb(c.hex);
+        return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b}) // ${c.name}`;
+      }).join("\n");
+      break;
+    
+    case "cpp":
+      output = "static const char* palette[] = {\n" +
+        filtered.map(c => `  "${c.hex}", // ${c.name}`).join(",\n") +
+        "\n};";
+      break;
+    
+    case "css":
+      output = ":root {\n" +
+        filtered.map(c => `  --color-${c.name.replace(/\s+/g, '-')}: ${c.hex};`).join("\n") +
+        "\n}";
+      break;
+  }
+
+  elements.output.value = output;
+}
+
+function copyOutput() {
+  const output = elements.output;
+  output.select();
+  navigator.clipboard.writeText(output.value).then(() => {
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = "✓ Copied!";
+    setTimeout(() => btn.textContent = originalText, 2000);
+  }).catch(err => {
+    console.error('Failed to copy:', err);
+  });
+}
+
+function resetFilters() {
+  elements.minL.value = 0;
+  elements.maxL.value = 1;
+  elements.bg.value = 1;
+  elements.count.value = 50;
+  document.querySelector('input[name="cvd"][value="none"]').checked = true;
+  updateCVDFilter();
+  stickyMax = true;
+  palette = initialPalette.slice();
+  renderPalette();
+}
+
+const cvdRadios = document.querySelectorAll('input[name="cvd"]');
+const paletteDiv = document.getElementById("palette");
+
+function updateCVDFilter() {
+  const selected = document.querySelector('input[name="cvd"]:checked').value;
+
+  if (selected === "none") {
+    paletteDiv.classList.remove("cvd-filtered");
+    document.documentElement.style.setProperty('--cvd-filter', 'none');
+  } else {
+    paletteDiv.classList.add("cvd-filtered");
+    document.documentElement.style.setProperty('--cvd-filter', `url(#${selected})`);
+  }
+}
+
+cvdRadios.forEach(radio => radio.addEventListener('change', updateCVDFilter));
+
+elements.minL.addEventListener('input', renderPalette);
+elements.maxL.addEventListener('input', renderPalette);
+elements.bg.addEventListener('input', renderPalette);
+elements.count.addEventListener('input', () => {
+  stickyMax = parseInt(elements.count.value) === parseInt(elements.count.max);
+  renderPalette();
+});
+
+updateCVDFilter();
+renderPalette();
+</script>
+
+</body>
+</html>
