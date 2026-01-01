@@ -8,6 +8,10 @@
   * {
     box-sizing: border-box;
   }
+  
+  html {
+	background-color: #6877e0;	
+  }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
@@ -41,6 +45,20 @@
   .subtitle {
     font-size: 18px;
     opacity: 0.9;
+  }
+  
+  .subtitle a {
+    color: #c0c0c0;
+	text-decoration: none;
+  }
+  
+  .subtitle a:visited {
+    color: white;
+  }
+  
+  .subtitle a:hover {
+    color: white;
+	text-decoration: underline;
   }
 
   .panel {
@@ -310,6 +328,7 @@
 
   .ab-plane-wrapper {
     position: relative;
+	overflow: scroll;
     width: 100%;
     max-width: 500px;
     flex-shrink: 0;
@@ -520,8 +539,8 @@
 
 <div class="container">
   <header>
-    <h1>🎨 Palette Explorer</h1>
-    <div class="subtitle">Discover, filter, and export beautiful color palettes</div>
+    <h1>Categorical Colour Scheme</h1>
+    <div class="subtitle">Visually distinct colours for data visualisation, loosely based on <a href="https://blog.xkcd.com/2010/05/03/color-survey-results/">XKCD Color survey</a></div>
   </header>
 
   <div class="panel">
@@ -559,7 +578,7 @@
       </div>
 	  
       <div class="control-group">
-        <label>Color Vision</label>
+        <label>Colorblind Accessibility Mode</label>
         <div class="cvd-options">
           <label><input type="radio" name="cvd" value="none" checked> Normal</label>
           <label><input type="radio" name="cvd" value="protanopia"> Protanopia</label>
@@ -569,6 +588,9 @@
           <label><input type="radio" name="cvd" value="tritanopia"> Tritanopia</label>
         </div>
       </div>
+	  
+      <div class="control-group">
+	  </div>
 
       <div class="control-group">
         <label>Export Format</label>
@@ -619,7 +641,7 @@
   
     <div class="ab-container">
       <div class="ab-plane-wrapper">
-        <img src="abplane.svg" style="width:100%; display:block; border-radius:12px" alt="CIELAB a-b plane">
+        <img src="abplane.svg" width="500" height="500" style="display:block; border-radius:12px" alt="CIELAB a-b plane">
         <canvas id="abPlane" width="500" height="500" style="position:absolute; inset:0;"></canvas>
       </div>
       
@@ -875,9 +897,7 @@ function showABInfo(d) {
   infoPanel.querySelector(".ab-name").textContent = d.name;
   infoPanel.querySelector(".ab-meta").innerHTML =
     `<div><strong>Hex:</strong> ${d.hex}</div>` +
-    `<div><strong>L*:</strong> ${d.lab.L.toFixed(1)}</div>` +
-    `<div><strong>a*:</strong> ${d.lab.a.toFixed(1)}</div>` +
-    `<div><strong>b*:</strong> ${d.lab.b.toFixed(1)}</div>`;
+    `<div><strong>L:</strong> ${d.L.toFixed(1)}</div>`;
 }
 
 function hideABInfo() {
@@ -958,7 +978,7 @@ function renderABPlane(colors) {
     ctx.strokeStyle = "#000";
     ctx.lineWidth = 1.5;
     ctx.stroke();
-    abDots.push({...c, x, y, lab});
+    abDots.push({...c, x, y});
   });
 }
 
@@ -1017,13 +1037,13 @@ function exportPalette() {
     case "rgb":
       output = filtered.map(c => {
         const rgb = hexToRgb(c.hex);
-        return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b}) // ${c.name}`;
+        return `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})     // ${c.name}`;
       }).join("\n");
       break;
     
     case "cpp":
-      output = "static const char* palette[] = {\n" +
-        filtered.map(c => `  "${c.hex}", // ${c.name}`).join(",\n") +
+      output = "static const std::uint32_t palette[] = {\n" +
+        filtered.map(c => `  0x${c.hex.slice(1)}, // ${c.name}`).join(",\n") +
         "\n};";
       break;
     
@@ -1035,6 +1055,7 @@ function exportPalette() {
   }
 
   elements.output.value = output;
+  elements.output.scrollIntoView({ behavior: "smooth"});
 }
 
 function copyOutput() {
